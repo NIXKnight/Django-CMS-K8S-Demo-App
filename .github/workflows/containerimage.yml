@@ -1,0 +1,31 @@
+name: Build Container Image
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          path: "${GITHUB_WORKSPACE}/Django-CMS-K8S-Demo-App"
+
+      - name: Build Django-CMS-K8S-Demo-App Container Image
+        shell: bash
+        working-directory: ${GITHUB_WORKSPACE}/Django-CMS-K8S-Demo-App
+        run: |
+          docker build . --file Dockerfile \
+            --tag "nixknight/django-cms-k8s-demo-app:${GITHUB_SHA}" \
+            --tag "nixknight/django-cms-k8s-demo-app:latest"
+
+      - name: Push Django-CMS-K8S-Demo-App Container Image to Docker Hub Registry
+        shell: bash
+        env:
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          docker login -u nixknight -p ${DOCKER_HUB_TOKEN}
+          docker push "nixknight/django-cms-k8s-demo-app:${GITHUB_SHA}"
+          docker push "nixknight/django-cms-k8s-demo-app:latest"
+          docker logout
